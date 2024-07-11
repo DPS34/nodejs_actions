@@ -1,0 +1,33 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # ajuste conforme necessário
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Deploy to EKS
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}  # Adicione a variável de ambiente para configuração do Kubeconfig
+        run: |
+          echo "${KUBE_CONFIG_DATA}" > kubeconfig.yaml  # Salva o kubeconfig em um arquivo
+          export KUBECONFIG=$PWD/kubeconfig.yaml  # Configura o KUBECONFIG para o arquivo criado
+          kubectl apply -f kube-deployment.yaml  # Aplica o arquivo de configuração do Kubernetes
